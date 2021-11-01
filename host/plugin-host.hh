@@ -15,7 +15,7 @@
 
 #include <clap/all.h>
 
-#include "../common/reducing-param-queue.hh"
+#include "reducing-param-queue.hh"
 #include "engine.hh"
 #include "plugin-param.hh"
 
