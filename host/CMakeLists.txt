@@ -26,6 +26,10 @@ add_executable(clap-host
   audio-settings-widget.cc
   audio-settings-widget.hh
 
+  param-queue.hh
+  reducing-param-queue.hh
+  reducing-param-queue.hxx
+
   plugin-param.cc
   plugin-param.hh
   plugin-host.cc
