@@ -7,8 +7,14 @@
   },
   "configurePresets": [
     {
+      "name": "user",
+      "displayName": "User",
+      "binaryDir": "${sourceDir}/builds/${presetName}",
+      "generator": "Ninja Multi-Config"
+    },
+    {
       "name": "ninja-multi-vcpkg",
-      "displayName": "Ninja Multi-Config",
+      "displayName": "VCPKG",
       "description": "Configure with vcpkg toolchain and generate Ninja project files for all configurations",
       "binaryDir": "${sourceDir}/builds/${presetName}",
       "generator": "Ninja Multi-Config",

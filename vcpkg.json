@@ -4,8 +4,6 @@
   "dependencies": [
     "portaudio",
     "portmidi",
-    "boost-iostreams",
-    "boost-serialization",
-    "qtdeclarative"
+    "qtbase"
   ]
 }
