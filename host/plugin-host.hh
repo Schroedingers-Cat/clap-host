@@ -15,7 +15,7 @@
 
 #include <clap/all.h>
 
-#include "reducing-param-queue.hh"
+#include <clap/helpers/reducing-param-queue.hh>
 #include "engine.hh"
 #include "plugin-param.hh"
 
@@ -232,9 +232,9 @@ private:
       bool isAdjusting;
    };
 
-   ReducingParamQueue<AppToEngineParamQueueValue> _appToEngineValueQueue;
-   ReducingParamQueue<AppToEngineParamQueueValue> _appToEngineModQueue;
-   ReducingParamQueue<EngineToAppParamQueueValue> _engineToAppValueQueue;
+   clap::helpers::ReducingParamQueue<clap_id, AppToEngineParamQueueValue> _appToEngineValueQueue;
+   clap::helpers::ReducingParamQueue<clap_id, AppToEngineParamQueueValue> _appToEngineModQueue;
+   clap::helpers::ReducingParamQueue<clap_id, EngineToAppParamQueueValue> _engineToAppValueQueue;
 
    std::unordered_map<clap_id, bool> _isAdjusting;
 

@@ -13,7 +13,7 @@
 #include "main-window.hh"
 #include "plugin-host.hh"
 
-#include "reducing-param-queue.hxx"
+#include <clap/helpers/reducing-param-queue.hxx>
 
 enum ThreadType {
    Unknown,

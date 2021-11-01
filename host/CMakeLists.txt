@@ -26,10 +26,6 @@ add_executable(clap-host
   audio-settings-widget.cc
   audio-settings-widget.hh
 
-  param-queue.hh
-  reducing-param-queue.hh
-  reducing-param-queue.hxx
-
   plugin-param.cc
   plugin-param.hh
   plugin-host.cc
@@ -64,7 +60,7 @@ add_executable(clap-host
 set_target_properties(clap-host PROPERTIES CXX_STANDARD 17)
 target_link_libraries(clap-host Qt6::Widgets Qt6::Core)
 target_link_libraries(clap-host portmidi portaudio porttime)
-target_link_libraries(clap-host clap-core)
+target_link_libraries(clap-host clap-core clap-helpers)
 
 if (LINUX)
   target_link_libraries(clap-host dl pthread)

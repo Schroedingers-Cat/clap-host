@@ -3,4 +3,5 @@ cmake_policy(SET CMP0100 NEW)  # handle .hh files
 project(CLAP_HOST C CXX)
 
 add_subdirectory(clap)
+add_subdirectory(clap-helpers)
 add_subdirectory(host)

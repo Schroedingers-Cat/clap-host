@@ -4,3 +4,6 @@
 [submodule "clap"]
 	path = clap
 	url = git://github.com/free-audio/clap
+[submodule "clap-helpers"]
+	path = clap-helpers
+	url = git://github.com/free-audio/clap-helpers
