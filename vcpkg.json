@@ -5,6 +5,8 @@
     "portaudio",
     "portmidi",
     "boost-iostreams",
-    "boost-archive"
+    "boost-archive",
+    "boost-serialization",
+    "qt"
   ]
 }
