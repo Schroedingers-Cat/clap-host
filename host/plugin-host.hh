@@ -14,8 +14,8 @@
 #include <QWidget>
 
 #include <clap/all.h>
-
 #include <clap/helpers/reducing-param-queue.hh>
+
 #include "engine.hh"
 #include "plugin-param.hh"
 
