@@ -6,6 +6,6 @@
     "portmidi",
     "boost-iostreams",
     "boost-serialization",
-    "qt"
+    "qtdeclarative"
   ]
 }
