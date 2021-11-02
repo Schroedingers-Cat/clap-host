@@ -3,7 +3,7 @@
 #include <QApplication>
 
 #include <portaudio.h>
-#include <portmidi.h>
+#include <rtmidi/RtMidi.h>
 
 #include "application.hh"
 
@@ -20,12 +20,6 @@ int main(int argc, char *argv[]) {
       return 1;
    }
 
-   PmError pm_err = Pm_Initialize();
-   if (pm_err != pmNoError) {
-      fprintf(stderr, "Failed to initialize portmidi\n");
-      return 1;
-   }
-
    int ret;
 
    {
@@ -34,7 +28,6 @@ int main(int argc, char *argv[]) {
       ret = app.exec();
    }
 
-   Pm_Terminate();
    Pa_Terminate();
    Pt_Stop();
    return ret;

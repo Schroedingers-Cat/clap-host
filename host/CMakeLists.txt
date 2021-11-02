@@ -6,23 +6,12 @@ if (UNIX)
   pkg_check_modules(PortAudio REQUIRED IMPORTED_TARGET portaudio-2.0)
 elseif(WIN32)
   find_package(portaudio CONFIG REQUIRED)
-  # portmidi through vcpkg is supported but won't be detected by cmake due to missing .cmake files. See README.md for more info.
-  # find_package(portmidi CONFIG REQUIRED)
 endif()
 
 find_package(Qt6Core REQUIRED)
 find_package(Qt6Widgets REQUIRED)
 
-# PortMidi do not provide pkgconfig it seems
-# if (UNIX AND NOT APPLE)
-#   pkg_check_modules(PortMidi REQUIRED IMPORTED_TARGET portmidi)
-# endif()
-
-if (APPLE)
-  add_library(portmidi INTERFACE)
-  target_link_options(portmidi INTERFACE -L/usr/local/lib)
-  target_link_libraries(portmidi INTERFACE libportmidi.dylib)
-endif()
+pkg_check_modules(RtMidi REQUIRED IMPORTED_TARGET rtmidi)
 
 add_executable(clap-host
   application.cc
@@ -65,7 +54,7 @@ add_executable(clap-host
 
 set_target_properties(clap-host PROPERTIES CXX_STANDARD 17)
 target_link_libraries(clap-host Qt6::Widgets Qt6::Core)
-target_link_libraries(clap-host portmidi portaudio porttime)
+target_link_libraries(clap-host ${RtMidi_LIBRARIES} portaudio porttime)
 target_link_libraries(clap-host clap-core clap-helpers)
 
 if (LINUX)

@@ -32,6 +32,9 @@ Engine::Engine(Application &application)
 
    connect(&_idleTimer, &QTimer::timeout, this, QOverload<>::of(&Engine::callPluginIdle));
    _idleTimer.start(1000 / 30);
+
+   _midiIn = std::make_unique<RtMidiIn>();
+   _midiInBuffer.reserve(512);
 }
 
 Engine::~Engine() {
@@ -45,7 +48,7 @@ void Engine::start() {
    assert(!_audio);
    assert(_state == kStateStopped);
 
-   auto &    as = _settings.audioSettings();
+   auto &as = _settings.audioSettings();
    const int bufferSize = 4 * 2 * as.bufferSize();
 
    _inputs[0] = (float *)calloc(1, bufferSize);
@@ -56,10 +59,10 @@ void Engine::start() {
    _pluginHost->setPorts(2, _inputs, 2, _outputs);
 
    /* midi */
-   PmError midi_err = Pm_OpenInput(
-      &_midi, _settings.midiSettings().deviceReference()._index, nullptr, 512, nullptr, nullptr);
-   if (midi_err != pmNoError) {
-      _midi = nullptr;
+   try {
+      _midiIn->openPort(_settings.midiSettings().deviceReference()._index);
+      _midiIn->ignoreTypes(false, false, false);
+   } catch (...) {
    }
 
    _pluginHost->activate(as.sampleRate());
@@ -105,23 +108,21 @@ void Engine::stop() {
       _audio = nullptr;
    }
 
-   if (_midi) {
-      Pm_Close(_midi);
-      _midi = nullptr;
-   }
+   if (_midiIn->isPortOpen())
+      _midiIn->closePort();
 
    _state = kStateStopped;
 }
 
-int Engine::audioCallback(const void *  input,
-                          void *        output,
+int Engine::audioCallback(const void *input,
+                          void *output,
                           unsigned long frameCount,
                           const PaStreamCallbackTimeInfo * /*timeInfo*/,
                           PaStreamCallbackFlags /*statusFlags*/,
                           void *userData) {
-   Engine *const      thiz = (Engine *)userData;
+   Engine *const thiz = (Engine *)userData;
    const float *const in = (const float *)input;
-   float *const       out = (float *)output;
+   float *const out = (float *)output;
 
    assert(thiz->_inputs[0] != nullptr);
    assert(thiz->_inputs[1] != nullptr);
@@ -140,65 +141,56 @@ int Engine::audioCallback(const void *  input,
    thiz->_pluginHost->processBegin(frameCount);
 
    MidiSettings &ms = thiz->_settings.midiSettings();
-
-   if (thiz->_midi) {
-      PmEvent evBuffer[512];
-      int     numRead = Pm_Read(thiz->_midi, evBuffer, sizeof(evBuffer) / sizeof(evBuffer[0]));
+   auto &midiBuf = thiz->_midiInBuffer;
+   while (thiz->_midiIn->isPortOpen()) {
+      auto msgTime = thiz->_midiIn->getMessage(&midiBuf);
+      if (midiBuf.empty())
+         break;
 
       const PtTimestamp currentTime = Pt_Time();
 
-      PmEvent *ev = evBuffer;
-      for (int i = 0; i < numRead; ++i) {
-         uint8_t eventType = Pm_MessageStatus(ev->message) >> 4;
-         uint8_t channel = Pm_MessageStatus(ev->message) & 0xf;
-         uint8_t data1 = Pm_MessageData1(ev->message);
-         uint8_t data2 = Pm_MessageData2(ev->message);
+      uint8_t eventType = midiBuf[0] >> 4;
+      uint8_t channel = midiBuf[0] & 0xf;
+      uint8_t data1 = midiBuf[1];
+      uint8_t data2 = midiBuf[2];
 
-         int32_t deltaMs = currentTime - ev->timestamp;
-         int32_t deltaSample = (deltaMs * thiz->_sampleRate) / 1000;
+      int32_t deltaMs = 0; // currentTime - msgTime;
+      int32_t deltaSample = (deltaMs * thiz->_sampleRate) / 1000;
 
-         if (deltaSample >= thiz->_nframes)
-            deltaSample = thiz->_nframes - 1;
+      if (deltaSample >= thiz->_nframes)
+         deltaSample = thiz->_nframes - 1;
 
-         int32_t sampleOffset = thiz->_nframes - deltaSample;
+      int32_t sampleOffset = thiz->_nframes - deltaSample;
 
-         switch (eventType) {
-         case MIDI_STATUS_NOTE_ON:
-            thiz->_pluginHost->processNoteOn(sampleOffset, channel, data1, data2);
-            ++ev;
-            break;
+      switch (eventType) {
+      case MIDI_STATUS_NOTE_ON:
+         thiz->_pluginHost->processNoteOn(sampleOffset, channel, data1, data2);
+         break;
 
-         case MIDI_STATUS_NOTE_OFF:
-            thiz->_pluginHost->processNoteOff(sampleOffset, channel, data1, data2);
-            ++ev;
-            break;
+      case MIDI_STATUS_NOTE_OFF:
+         thiz->_pluginHost->processNoteOff(sampleOffset, channel, data1, data2);
+         break;
 
-         case MIDI_STATUS_CC:
-            thiz->_pluginHost->processCC(sampleOffset, channel, data1, data2);
-            ++ev;
-            break;
+      case MIDI_STATUS_CC:
+         thiz->_pluginHost->processCC(sampleOffset, channel, data1, data2);
+         break;
 
-         case MIDI_STATUS_NOTE_AT:
-            std::cerr << "Note AT key: " << (int)data1 << ", pres: " << (int)data2 << std::endl;
-            thiz->_pluginHost->processNoteAt(sampleOffset, channel, data1, data2);
-            ++ev;
-            break;
+      case MIDI_STATUS_NOTE_AT:
+         std::cerr << "Note AT key: " << (int)data1 << ", pres: " << (int)data2 << std::endl;
+         thiz->_pluginHost->processNoteAt(sampleOffset, channel, data1, data2);
+         break;
 
-         case MIDI_STATUS_CHANNEL_AT:
-            ++ev;
-            std::cerr << "Channel after touch" << std::endl;
-            break;
+      case MIDI_STATUS_CHANNEL_AT:
+         std::cerr << "Channel after touch" << std::endl;
+         break;
 
-         case MIDI_STATUS_PITCH_BEND:
-            thiz->_pluginHost->processPitchBend(sampleOffset, channel, (data2 << 7) | data1);
-            ++ev;
-            break;
+      case MIDI_STATUS_PITCH_BEND:
+         thiz->_pluginHost->processPitchBend(sampleOffset, channel, (data2 << 7) | data1);
+         break;
 
-         default:
-            std::cerr << "unknown event type: " << (int)eventType << std::endl;
-            ++ev;
-            break;
-         }
+      default:
+         std::cerr << "unknown event type: " << (int)eventType << std::endl;
+         break;
       }
    }
 

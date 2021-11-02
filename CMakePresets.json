@@ -7,10 +7,16 @@
   },
   "configurePresets": [
     {
-      "name": "user",
-      "displayName": "User",
+      "name": "vscode-system",
+      "displayName": "VSCode + System Libraries",
       "binaryDir": "${sourceDir}/builds/${presetName}",
-      "generator": "Ninja Multi-Config"
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": {
+          "type": "boolean",
+          "value": true
+        }
+      }
     },
     {
       "name": "ninja-multi-vcpkg",

@@ -9,8 +9,9 @@
 #include <QWidget>
 
 #include <portaudio.h>
-#include <portmidi.h>
 #include <porttime.h>
+
+#include <rtmidi/RtMidi.h>
 
 class Application;
 class Settings;
@@ -45,6 +46,8 @@ public:
 
    PluginHost &pluginHost() const { return *_pluginHost; }
 
+   auto midiIn() const { return _midiIn.get(); }
+
 public:
    void callPluginIdle();
 
@@ -68,7 +71,8 @@ private:
 
    /* audio & midi streams */
    PaStream *_audio = nullptr;
-   PmStream *_midi = nullptr;
+
+   std::unique_ptr<RtMidiIn> _midiIn;
 
    /* engine context */
    int64_t _steadyTime = 0;
@@ -80,6 +84,7 @@ private:
    float *_outputs[2] = {nullptr, nullptr};
 
    std::unique_ptr<PluginHost> _pluginHost;
+   std::vector<unsigned char> _midiInBuffer;
 
    QTimer _idleTimer;
 };

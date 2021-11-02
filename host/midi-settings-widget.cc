@@ -4,17 +4,24 @@
 #include <QGroupBox>
 #include <QVBoxLayout>
 
-#include <portmidi.h>
+#include <rtmidi/RtMidi.h>
 
 #include "midi-settings-widget.hh"
 #include "midi-settings.hh"
+#include "application.hh"
+#include "engine.hh"
 
 MidiSettingsWidget::MidiSettingsWidget(MidiSettings &midiSettings) : _midiSettings(midiSettings) {
    auto layout = new QVBoxLayout(this);
 
    auto deviceComboBox = new QComboBox;
    bool deviceFound = false;
-   auto deviceCount = Pm_CountDevices();
+
+   auto &app = Application::instance();
+   auto engine = app.engine();
+   auto midiIn = engine ? engine->midiIn() : nullptr;
+
+   auto deviceCount = midiIn ? midiIn->getPortCount() : 0;
    int  inputIndex = 0;
 
    if (deviceCount <= 0) {
@@ -22,14 +29,12 @@ MidiSettingsWidget::MidiSettingsWidget(MidiSettings &midiSettings) : _midiSettin
    }
 
    for (int i = 0; i < deviceCount; ++i) {
-      auto deviceInfo = Pm_GetDeviceInfo(i);
-      if (!deviceInfo->input)
-         continue;
+      auto name = QString::fromStdString(midiIn->getPortName(i));
 
-      deviceComboBox->addItem(deviceInfo->name);
+      deviceComboBox->addItem(name);
 
       if (!deviceFound && _midiSettings.deviceReference()._index == i &&
-          _midiSettings.deviceReference()._name == deviceInfo->name) {
+          _midiSettings.deviceReference()._name == name) {
          deviceComboBox->setCurrentIndex(inputIndex);
          deviceFound = true;
          selectedDeviceChanged(inputIndex);
@@ -41,11 +46,9 @@ MidiSettingsWidget::MidiSettingsWidget(MidiSettings &midiSettings) : _midiSettin
    // try to find the device just by its name.
    inputIndex = 0;
    for (int i = 0; !deviceFound && i < deviceCount; ++i) {
-      auto deviceInfo = Pm_GetDeviceInfo(i);
-      if (!deviceInfo->input)
-         continue;
+      auto name = QString::fromStdString(midiIn->getPortName(i));
 
-      if (_midiSettings.deviceReference()._name == deviceInfo->name) {
+      if (_midiSettings.deviceReference()._name == name) {
          deviceComboBox->setCurrentIndex(inputIndex);
          deviceFound = true;
          selectedDeviceChanged(inputIndex);
@@ -69,12 +72,14 @@ MidiSettingsWidget::MidiSettingsWidget(MidiSettings &midiSettings) : _midiSettin
 }
 
 void MidiSettingsWidget::selectedDeviceChanged(int index) {
+   auto &app = Application::instance();
+   auto engine = app.engine();
+   auto midiIn = engine ? engine->midiIn() : nullptr;
+
    int  inputIndex = 0;
-   auto deviceCount = Pm_CountDevices();
+   auto deviceCount = midiIn ? midiIn->getPortCount() : 0;
    for (int i = 0; i < deviceCount; ++i) {
-      auto deviceInfo = Pm_GetDeviceInfo(i);
-      if (!deviceInfo->input)
-         continue;
+      auto name = QString::fromStdString(midiIn->getPortName(i));
 
       if (inputIndex != index) {
          ++inputIndex;
@@ -83,7 +88,7 @@ void MidiSettingsWidget::selectedDeviceChanged(int index) {
 
       DeviceReference ref;
       ref._index = i;
-      ref._name = deviceInfo->name;
+      ref._name = name;
       _midiSettings.setDeviceReference(ref);
       break;
    }
