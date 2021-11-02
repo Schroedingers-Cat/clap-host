@@ -1,11 +1,17 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
+if (APPLE OR UNIX)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(PortAudio REQUIRED IMPORTED_TARGET portaudio-2.0)
+elseif(WIN32)
+  find_package(portaudio CONFIG REQUIRED)
+  # portmidi through vcpkg is supported but won't be detected by cmake due to missing .cmake files. See README.md for more info.
+  # find_package(portmidi CONFIG REQUIRED)
+endif()
+
 find_package(Qt6Core REQUIRED)
 find_package(Qt6Widgets REQUIRED)
-
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(PortAudio REQUIRED IMPORTED_TARGET portaudio-2.0)
 
 # PortMidi do not provide pkgconfig it seems
 # if (UNIX AND NOT APPLE)
