@@ -1,7 +1,7 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
-if (APPLE OR UNIX)
+if (UNIX)
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(PortAudio REQUIRED IMPORTED_TARGET portaudio-2.0)
 elseif(WIN32)
