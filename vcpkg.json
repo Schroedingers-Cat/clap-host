@@ -1,6 +1,6 @@
 {
-  "name": "main",
-  "version-string": "latest",
+  "name": "clap-host",
+  "version-string": "0.1.0",
   "dependencies": [
     "portaudio",
     "portmidi",
