@@ -65,7 +65,7 @@ add_executable(clap-host
 
 set_target_properties(clap-host PROPERTIES CXX_STANDARD 17)
 target_link_libraries(clap-host Qt6::Widgets Qt6::Core)
-target_link_libraries(clap-host portmidi portaudio porttime)
+target_link_libraries(clap-host portmidi portaudio)
 target_link_libraries(clap-host clap-core clap-helpers)
 
 if (LINUX)
