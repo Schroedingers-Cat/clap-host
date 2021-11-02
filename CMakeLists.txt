@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.17)
 cmake_policy(SET CMP0100 NEW)  # handle .hh files
-set(CMAKE_TOOLCHAIN_FILE "./vcpkg/scripts/buildsystems/vcpkg.cmake")
+if (WIN32)
+    set(CMAKE_TOOLCHAIN_FILE "./vcpkg/scripts/buildsystems/vcpkg.cmake")
+endif()
 
 project(CLAP_HOST C CXX)
 
