@@ -4,14 +4,14 @@ set(CMAKE_AUTOMOC ON)
 if (UNIX)
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(PortAudio REQUIRED IMPORTED_TARGET portaudio-2.0)
+  pkg_check_modules(RtMidi REQUIRED IMPORTED_TARGET rtmidi)
 elseif(WIN32)
   find_package(portaudio CONFIG REQUIRED)
+  find_package(RtMidi CONFIG REQUIRED rtmidi)
 endif()
 
 find_package(Qt6Core REQUIRED)
 find_package(Qt6Widgets REQUIRED)
-
-pkg_check_modules(RtMidi REQUIRED IMPORTED_TARGET rtmidi)
 
 add_executable(clap-host
   application.cc
