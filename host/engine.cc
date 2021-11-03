@@ -66,21 +66,27 @@ void Engine::start() {
    } catch (...) {
    }
 
-   _pluginHost->activate(as.sampleRate());
-
    /* audio */
    try {
+      auto &audioSettings = _settings.audioSettings();
+      unsigned int bufferSize = audioSettings.bufferSize();
+
       RtAudio::StreamParameters outParams;
-      outParams.deviceId = _audio->getDefaultOutputDevice();
+      outParams.deviceId = audioSettings.deviceReference()._index;
       outParams.firstChannel = 0;
       outParams.nChannels = 2;
 
-      unsigned int bufferSize = 256;
-      _audio->openStream(
-         &outParams, nullptr, RTAUDIO_FLOAT32, 44100, &bufferSize, &Engine::audioCallback, this);
+      _audio->openStream(&outParams,
+                         nullptr,
+                         RTAUDIO_FLOAT32,
+                         audioSettings.sampleRate(),
+                         &bufferSize,
+                         &Engine::audioCallback,
+                         this);
       _nframes = bufferSize;
-      _audio->startStream();
       _state = kStateRunning;
+      _pluginHost->activate(as.sampleRate());
+      _audio->startStream();
    } catch (...) {
    }
 }
@@ -91,8 +97,10 @@ void Engine::stop() {
    if (_state == kStateRunning)
       _state = kStateStopping;
 
-   if (_audio->isStreamOpen())
+   if (_audio->isStreamOpen()) {
+      _audio->stopStream();
       _audio->closeStream();
+   }
 
    if (_midiIn->isPortOpen())
       _midiIn->closePort();

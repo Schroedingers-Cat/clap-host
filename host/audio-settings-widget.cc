@@ -6,9 +6,9 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
+#include "application.hh"
 #include "audio-settings-widget.hh"
 #include "audio-settings.hh"
-#include "application.hh"
 #include "engine.hh"
 
 static const std::vector<int> SAMPLE_RATES = {
@@ -56,6 +56,11 @@ AudioSettingsWidget::AudioSettingsWidget(AudioSettings &audioSettings)
          deviceFound = true;
          selectedDeviceChanged(i);
       }
+   }
+
+   if (!deviceFound) {
+      deviceComboBox->setCurrentIndex(0);
+      selectedDeviceChanged(0);
    }
 
    connect(
