@@ -4,6 +4,12 @@
   "dependencies": [
     "portaudio",
     "rtmidi",
-    "qtbase[core,widgets]"
+    {
+      "name": "qtbase",
+      "features": [
+        "core",
+        "widgets"
+      ]
+    }
   ]
 }
