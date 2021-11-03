@@ -13,7 +13,21 @@ name: build
 on: [push, workflow_dispatch]
 
 jobs:
-  job:
+  SetupUbuntu:
+    name: setup ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      name: install dependencies
+      run: sudo apt install gperf
+
+  SetupMacOs:
+    name: setup macos
+    runs-on: macos-latest
+    steps:
+      name: install dependencies
+      run: brew install automake
+
+  VCPKG:
     name: ${{ matrix.os }}-${{ github.workflow }}
     runs-on: ${{ matrix.os }}
     strategy:
