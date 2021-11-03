@@ -8,9 +8,7 @@
 #include <QTimer>
 #include <QWidget>
 
-#include <portaudio.h>
-#include <porttime.h>
-
+#include <RtAudio.h>
 #include <RtMidi.h>
 
 class Application;
@@ -42,7 +40,7 @@ public:
    void loadMidiFile(const QString &path);
 
    bool isRunning() const noexcept { return _state == kStateRunning; }
-   int  sampleRate() const noexcept { return _sampleRate; }
+   int sampleRate() const noexcept { return _sampleRate; }
 
    PluginHost &pluginHost() const { return *_pluginHost; }
 
@@ -56,22 +54,21 @@ private:
    friend class PluginHost;
    friend class Vst3Plugin;
 
-   static int audioCallback(const void *                    input,
-                            void *                          output,
-                            unsigned long                   frameCount,
-                            const PaStreamCallbackTimeInfo *timeInfo,
-                            PaStreamCallbackFlags           statusFlags,
-                            void *                          userData);
+   static int audioCallback(void *outputBuffer,
+                            void *inputBuffer,
+                            unsigned int nBufferFrames,
+                            double streamTime,
+                            RtAudioStreamStatus status,
+                            void *data);
 
    Application &_application;
-   Settings &   _settings;
-   WId          _parentWindow;
+   Settings &_settings;
+   WId _parentWindow;
 
    State _state = kStateStopped;
 
    /* audio & midi streams */
-   PaStream *_audio = nullptr;
-
+   std::unique_ptr<RtAudio> _audio;
    std::unique_ptr<RtMidiIn> _midiIn;
 
    /* engine context */

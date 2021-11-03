@@ -35,6 +35,8 @@ Engine::Engine(Application &application)
 
    _midiIn = std::make_unique<RtMidiIn>();
    _midiInBuffer.reserve(512);
+
+   _audio = std::make_unique<RtAudio>();
 }
 
 Engine::~Engine() {
@@ -68,32 +70,18 @@ void Engine::start() {
    _pluginHost->activate(as.sampleRate());
 
    /* audio */
-   auto deviceInfo = Pa_GetDeviceInfo(as.deviceReference()._index);
+   try {
+      RtAudio::StreamParameters outParams;
+      outParams.deviceId = _audio->getDefaultOutputDevice();
+      outParams.firstChannel = 0;
+      outParams.nChannels = 2;
 
-   PaStreamParameters params;
-   params.channelCount = 2;
-   params.device = as.deviceReference()._index;
-   params.hostApiSpecificStreamInfo = nullptr;
-   params.sampleFormat = paFloat32;
-   params.suggestedLatency = 0;
-
-   _state = kStateRunning;
-   _nframes = as.bufferSize();
-   PaError err = Pa_OpenStream(&_audio,
-                               deviceInfo->maxInputChannels >= 2 ? &params : nullptr,
-                               &params,
-                               as.sampleRate(),
-                               as.bufferSize(),
-                               paClipOff | paDitherOff,
-                               &Engine::audioCallback,
-                               this);
-   if (err != paNoError) {
-      qWarning() << tr("Failed to initialize PortAudio: ") << Pa_GetErrorText(err);
-      stop();
-      return;
+      unsigned int bufferSize = 256;
+      _audio->openStream(
+         &outParams, nullptr, RTAUDIO_FLOAT32, 44100, &bufferSize, &Engine::audioCallback, this);
+      _audio->startStream();
+   } catch (...) {
    }
-
-   err = Pa_StartStream(_audio);
 }
 
 void Engine::stop() {
@@ -102,11 +90,8 @@ void Engine::stop() {
    if (_state == kStateRunning)
       _state = kStateStopping;
 
-   if (_audio) {
-      Pa_StopStream(_audio);
-      Pa_CloseStream(_audio);
-      _audio = nullptr;
-   }
+   if (_audio->isStreamOpen())
+      _audio->closeStream();
 
    if (_midiIn->isPortOpen())
       _midiIn->closePort();
@@ -114,15 +99,15 @@ void Engine::stop() {
    _state = kStateStopped;
 }
 
-int Engine::audioCallback(const void *input,
-                          void *output,
-                          unsigned long frameCount,
-                          const PaStreamCallbackTimeInfo * /*timeInfo*/,
-                          PaStreamCallbackFlags /*statusFlags*/,
-                          void *userData) {
-   Engine *const thiz = (Engine *)userData;
-   const float *const in = (const float *)input;
-   float *const out = (float *)output;
+int Engine::audioCallback(void *outputBuffer,
+                          void *inputBuffer,
+                          unsigned int frameCount,
+                          double currentTime,
+                          RtAudioStreamStatus status,
+                          void *data) {
+   Engine *const thiz = (Engine *)data;
+   const float *const in = (const float *)inputBuffer;
+   float *const out = (float *)outputBuffer;
 
    assert(thiz->_inputs[0] != nullptr);
    assert(thiz->_inputs[1] != nullptr);
@@ -147,15 +132,13 @@ int Engine::audioCallback(const void *input,
       if (midiBuf.empty())
          break;
 
-      const PtTimestamp currentTime = Pt_Time();
-
       uint8_t eventType = midiBuf[0] >> 4;
       uint8_t channel = midiBuf[0] & 0xf;
       uint8_t data1 = midiBuf[1];
       uint8_t data2 = midiBuf[2];
 
-      int32_t deltaMs = 0; // currentTime - msgTime;
-      int32_t deltaSample = (deltaMs * thiz->_sampleRate) / 1000;
+      double deltaMs = currentTime - msgTime;
+      double deltaSample = (deltaMs * thiz->_sampleRate) / 1000;
 
       if (deltaSample >= thiz->_nframes)
          deltaSample = thiz->_nframes - 1;
@@ -206,13 +189,13 @@ int Engine::audioCallback(const void *input,
 
    switch (thiz->_state) {
    case kStateRunning:
-      return paContinue;
+      return 0;
    case kStateStopping:
       thiz->_state = kStateStopped;
-      return paComplete;
+      return 1;
    default:
       assert(false && "unreachable");
-      return paAbort;
+      return 2;
    }
 }
 

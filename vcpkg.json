@@ -2,7 +2,7 @@
   "name": "clap-host",
   "version-string": "0.1.0",
   "dependencies": [
-    "portaudio",
+    "rtaudio",
     "rtmidi",
     {
       "name": "qtbase",
