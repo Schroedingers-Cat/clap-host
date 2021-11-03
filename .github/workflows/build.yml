@@ -13,20 +13,6 @@ name: build
 on: [push, workflow_dispatch]
 
 jobs:
-  SetupUbuntu:
-    name: setup ubuntu
-    runs-on: ubuntu-latest
-    steps:
-      - name: install dependencies
-        run: sudo apt install gperf
-
-  SetupMacOs:
-    name: setup macos
-    runs-on: macos-latest
-    steps:
-      - name: install dependencies
-        run: brew install automake autoconf
-
   VCPKG:
     name: ${{ matrix.os }}-${{ github.workflow }}
     runs-on: ${{ matrix.os }}
@@ -41,6 +27,14 @@ jobs:
           submodules: true
 
       - uses: lukka/get-cmake@latest
+
+      - name: Setup MacOS
+        runs-on: macos-latest
+        run: brew install automake autoconf
+
+      - name: Setup Ubuntu
+        runs-on: ubuntu-latest
+        run: sudo apt install gperf
 
       - name: Restore artifacts, or setup vcpkg for building artifacts
         uses: lukka/run-vcpkg@v10
