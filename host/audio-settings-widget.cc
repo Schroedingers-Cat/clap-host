@@ -6,10 +6,10 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-#include <portaudio.h>
-
 #include "audio-settings-widget.hh"
 #include "audio-settings.hh"
+#include "application.hh"
+#include "engine.hh"
 
 static const std::vector<int> SAMPLE_RATES = {
    44100,
@@ -26,15 +26,20 @@ AudioSettingsWidget::AudioSettingsWidget(AudioSettings &audioSettings)
    : _audioSettings(audioSettings) {
    /* devices */
    auto deviceComboBox = new QComboBox(this);
-   auto deviceCount = Pa_GetDeviceCount();
+
+   auto engine = Application::instance().engine();
+   auto audio = engine->audio();
+
+   auto deviceCount = audio->getDeviceCount();
    bool deviceFound = false;
 
    for (int i = 0; i < deviceCount; ++i) {
-      auto deviceInfo = Pa_GetDeviceInfo(i);
-      deviceComboBox->addItem(deviceInfo->name);
+      auto deviceInfo = audio->getDeviceInfo(i);
+      QString name = QString::fromStdString(deviceInfo.name);
+      deviceComboBox->addItem(name);
 
       if (!deviceFound && _audioSettings.deviceReference()._index == i &&
-          _audioSettings.deviceReference()._name == deviceInfo->name) {
+          _audioSettings.deviceReference()._name == name) {
          deviceComboBox->setCurrentIndex(i);
          deviceFound = true;
          selectedDeviceChanged(i);
@@ -43,8 +48,10 @@ AudioSettingsWidget::AudioSettingsWidget(AudioSettings &audioSettings)
 
    // try to find the device just by its name.
    for (int i = 0; !deviceFound && i < deviceCount; ++i) {
-      auto deviceInfo = Pa_GetDeviceInfo(i);
-      if (_audioSettings.deviceReference()._name == deviceInfo->name) {
+      auto deviceInfo = audio->getDeviceInfo(i);
+      QString name = QString::fromStdString(deviceInfo.name);
+
+      if (_audioSettings.deviceReference()._name == name) {
          deviceComboBox->setCurrentIndex(i);
          deviceFound = true;
          selectedDeviceChanged(i);
@@ -103,11 +110,13 @@ AudioSettingsWidget::AudioSettingsWidget(AudioSettings &audioSettings)
 }
 
 void AudioSettingsWidget::selectedDeviceChanged(int index) {
-   auto deviceInfo = Pa_GetDeviceInfo(index);
+   auto engine = Application::instance().engine();
+   auto audio = engine->audio();
+   auto deviceInfo = audio->getDeviceInfo(index);
 
    DeviceReference ref;
    ref._index = index;
-   ref._name = deviceInfo->name;
+   ref._name = QString::fromStdString(deviceInfo.name);
    _audioSettings.setDeviceReference(ref);
 }
 

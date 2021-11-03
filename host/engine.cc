@@ -47,7 +47,6 @@ Engine::~Engine() {
 }
 
 void Engine::start() {
-   assert(!_audio);
    assert(_state == kStateStopped);
 
    auto &as = _settings.audioSettings();
@@ -79,7 +78,9 @@ void Engine::start() {
       unsigned int bufferSize = 256;
       _audio->openStream(
          &outParams, nullptr, RTAUDIO_FLOAT32, 44100, &bufferSize, &Engine::audioCallback, this);
+      _nframes = bufferSize;
       _audio->startStream();
+      _state = kStateRunning;
    } catch (...) {
    }
 }

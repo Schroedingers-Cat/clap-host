@@ -45,6 +45,7 @@ public:
    PluginHost &pluginHost() const { return *_pluginHost; }
 
    auto midiIn() const { return _midiIn.get(); }
+   auto audio() const { return _audio.get(); }
 
 public:
    void callPluginIdle();
