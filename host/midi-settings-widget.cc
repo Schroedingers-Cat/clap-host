@@ -4,7 +4,7 @@
 #include <QGroupBox>
 #include <QVBoxLayout>
 
-#include <rtmidi/RtMidi.h>
+#include <RtMidi.h>
 
 #include "midi-settings-widget.hh"
 #include "midi-settings.hh"

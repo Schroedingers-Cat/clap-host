@@ -11,7 +11,7 @@
 #include <portaudio.h>
 #include <porttime.h>
 
-#include <rtmidi/RtMidi.h>
+#include <RtMidi.h>
 
 class Application;
 class Settings;

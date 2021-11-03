@@ -3,7 +3,7 @@
 #include <QApplication>
 
 #include <portaudio.h>
-#include <rtmidi/RtMidi.h>
+#include <RtMidi.h>
 
 #include "application.hh"
 
