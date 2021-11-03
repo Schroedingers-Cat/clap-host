@@ -4,11 +4,11 @@ set(CMAKE_AUTOMOC ON)
 if (UNIX)
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(PortAudio REQUIRED IMPORTED_TARGET portaudio-2.0)
-  pkg_check_modules(RtMidi REQUIRED IMPORTED_TARGET rtmidi)
 elseif(WIN32)
   find_package(portaudio CONFIG REQUIRED)
-  find_package(RtMidi CONFIG REQUIRED rtmidi)
 endif()
+
+pkg_check_modules(RtMidi REQUIRED IMPORTED_TARGET rtmidi)
 
 find_package(Qt6Core REQUIRED)
 find_package(Qt6Widgets REQUIRED)
@@ -54,7 +54,7 @@ add_executable(clap-host
 
 set_target_properties(clap-host PROPERTIES CXX_STANDARD 17)
 target_link_libraries(clap-host Qt6::Widgets Qt6::Core)
-target_link_libraries(clap-host ${RtMidi_LIBRARIES} portaudio porttime)
+target_link_libraries(clap-host PkgConfig::RtMidi portaudio porttime)
 target_link_libraries(clap-host clap-core clap-helpers)
 
 if (LINUX)
