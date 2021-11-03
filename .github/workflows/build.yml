@@ -29,11 +29,11 @@ jobs:
       - uses: lukka/get-cmake@latest
 
       - name: Setup MacOS
-        runs-on: macos-latest
+        if: ${{ matrix.os }} == macos-latest
         run: brew install automake autoconf
 
       - name: Setup Ubuntu
-        runs-on: ubuntu-latest
+        if: ${{ matrix.os }} == ubuntu-latest
         run: sudo apt install gperf
 
       - name: Restore artifacts, or setup vcpkg for building artifacts
