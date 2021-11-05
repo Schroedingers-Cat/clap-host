@@ -430,6 +430,15 @@ bool PluginHost::clapThreadPoolRequestExec(const clap_host *host, uint32_t num_t
 
    Q_ASSERT(!h->_threadPoolStop);
    Q_ASSERT(!h->_threadPool.empty());
+
+   if (num_tasks == 0)
+      return true;
+
+   if (num_tasks == 1) {
+      h->_pluginThreadPool->exec(h->_plugin, 0);
+      return true;
+   }
+
    h->_threadPoolTaskIndex = 0;
    h->_threadPoolSemaphoreProd.release(num_tasks);
    h->_threadPoolSemaphoreDone.acquire(num_tasks);
