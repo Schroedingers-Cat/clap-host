@@ -6,8 +6,8 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(RtMidi REQUIRED IMPORTED_TARGET rtmidi)
 pkg_check_modules(RtAudio REQUIRED IMPORTED_TARGET rtaudio)
 
-find_package(Qt6Core REQUIRED)
-find_package(Qt6Widgets REQUIRED)
+find_package(Qt6Core CONFIG REQUIRED)
+find_package(Qt6Widgets CONFIG REQUIRED)
 
 add_executable(clap-host
   application.cc
