@@ -1,10 +1,14 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(RtMidi REQUIRED IMPORTED_TARGET rtmidi)
-pkg_check_modules(RtAudio REQUIRED IMPORTED_TARGET rtaudio)
+if(UsePkgConfig)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(RtMidi REQUIRED IMPORTED_TARGET rtmidi)
+  pkg_check_modules(RtAudio REQUIRED IMPORTED_TARGET rtaudio)
+else()
+  find_package(RtMidi CONFIG REQUIRED)
+  find_package(RtAudio CONFIG REQUIRED)
+endif()
 
 find_package(Qt6Core CONFIG REQUIRED)
 find_package(Qt6Widgets CONFIG REQUIRED)
@@ -50,7 +54,11 @@ add_executable(clap-host
 
 set_target_properties(clap-host PROPERTIES CXX_STANDARD 17)
 target_link_libraries(clap-host Qt6::Widgets Qt6::Core)
-target_link_libraries(clap-host PkgConfig::RtMidi PkgConfig::RtAudio)
+if(UsePkgConfig)
+  target_link_libraries(clap-host PkgConfig::RtMidi PkgConfig::RtAudio)
+else()
+  target_link_libraries(clap-host RtAudio::rtaudio RtMidi::rtmidi)
+endif()
 target_link_libraries(clap-host clap-core clap-helpers)
 
 if (LINUX)

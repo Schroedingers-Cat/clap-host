@@ -15,17 +15,17 @@
 
 #include <clap/helpers/reducing-param-queue.hxx>
 
-enum ThreadType {
+enum class ThreadType {
    Unknown,
    MainThread,
    AudioThread,
    AudioThreadPool,
 };
 
-thread_local ThreadType g_thread_type = Unknown;
+thread_local ThreadType g_thread_type = ThreadType::Unknown;
 
 PluginHost::PluginHost(Engine &engine) : QObject(&engine), _engine(engine) {
-   g_thread_type = MainThread;
+   g_thread_type = ThreadType::MainThread;
 
    host_.host_data = this;
    host_.clap_version = CLAP_VERSION;
@@ -71,7 +71,7 @@ void PluginHost::terminateThreadPool() {
 }
 
 void PluginHost::threadPoolEntry() {
-   g_thread_type = AudioThreadPool;
+   g_thread_type = ThreadType::AudioThreadPool;
    while (true) {
       _threadPoolSemaphoreProd.acquire();
       if (_threadPoolStop)
@@ -406,17 +406,17 @@ PluginHost *PluginHost::fromHost(const clap_host *host) {
    return h;
 }
 
-bool PluginHost::clapIsMainThread(const clap_host *host) { return g_thread_type == MainThread; }
+bool PluginHost::clapIsMainThread(const clap_host *host) { return g_thread_type == ThreadType::MainThread; }
 
-bool PluginHost::clapIsAudioThread(const clap_host *host) { return g_thread_type == AudioThread; }
+bool PluginHost::clapIsAudioThread(const clap_host *host) { return g_thread_type == ThreadType::AudioThread; }
 
 void PluginHost::checkForMainThread() {
-   if (g_thread_type != MainThread)
+   if (g_thread_type != ThreadType::MainThread)
       throw std::logic_error("Requires Main Thread!");
 }
 
 void PluginHost::checkForAudioThread() {
-   if (g_thread_type != AudioThread)
+   if (g_thread_type != ThreadType::AudioThread)
       throw std::logic_error("Requires Audio Thread!");
 }
 
@@ -591,14 +591,14 @@ bool PluginHost::clapGuiResize(const clap_host *host, uint32_t width, uint32_t h
 }
 
 void PluginHost::processBegin(int nframes) {
-   g_thread_type = AudioThread;
+   g_thread_type = ThreadType::AudioThread;
 
    _process.frames_count = nframes;
    _process.steady_time = _engine._steadyTime;
 }
 
 void PluginHost::processEnd(int nframes) {
-   g_thread_type = Unknown;
+   g_thread_type = ThreadType::Unknown;
 
    _process.frames_count = nframes;
    _process.steady_time = _engine._steadyTime;
@@ -791,7 +791,7 @@ void PluginHost::process() {
    _evIn.clear();
 
    _engineToAppValueQueue.producerDone();
-   g_thread_type = Unknown;
+   g_thread_type = ThreadType::Unknown;
 }
 
 void PluginHost::idle() {

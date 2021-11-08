@@ -28,6 +28,10 @@
         "CMAKE_TOOLCHAIN_FILE": {
           "type": "FILEPATH",
           "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        },
+        "UsePkgConfig": {
+          "type": "boolean",
+          "value": false
         }
       }
     },
@@ -41,6 +45,10 @@
         "CMAKE_TOOLCHAIN_FILE": {
           "type": "FILEPATH",
           "value": "./vcpkg/scripts/buildsystems/vcpkg.cmake"
+        },
+        "UsePkgConfig": {
+          "type": "boolean",
+          "value": false
         }
       }
     }
